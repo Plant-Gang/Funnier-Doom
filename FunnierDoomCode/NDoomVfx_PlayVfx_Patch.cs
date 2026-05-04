@@ -23,6 +23,8 @@ public static class NDoomVfxPlayVfxPatch
 
     /// Automatically discerns how many SFX files are in the "FunnyDoomSounds" folder
     private static readonly int FunnySoundsAmount = Directory.GetFiles(SfxAssetsPath).Length;
+
+    private static int _recentFunnySoundIndex;
     
     /**
      * Attaches the patch / prefix to the target method "PlayVFX"
@@ -49,24 +51,19 @@ public static class NDoomVfxPlayVfxPatch
         // Check if any funny sounds exist
         if (FunnySoundsAmount <= 0) return;
         
-        // Start to randomly choose a sound
-        Random random = new Random();
-        int funnySoundIndex = random.Next(0, FunnySoundsAmount);
-            
-        // Assign the random sound
-        string funnySfxName = Directory.GetFiles(SfxAssetsPath).ElementAt(funnySoundIndex);
-
+        // Choose a random sound
+        string funnySfxName = Directory.GetFiles(SfxAssetsPath).ElementAt(ReturnRandomIndex());
         string randomFunnySfxPath = Path.Combine(SfxAssetsPath, funnySfxName);
         
-        
         // Playing the sound
-        AudioStreamMP3 stream = AudioStreamMP3.LoadFromFile(randomFunnySfxPath);
-    
+        AudioStreamWav stream = AudioStreamWav.LoadFromFile(randomFunnySfxPath);
+        // AudioStreamMP3 stream = AudioStreamMP3.LoadFromFile(randomFunnySfxPath);
         AudioStreamPlayer player = new AudioStreamPlayer();
         player.Stream = stream;
-        // -10 DB by default because files are usually very loud, also it'd be weird to have
-        // a slider go from -40 to 50.
-        player.VolumeDb = (float) FunnierDoomModConfig.VolumeSlider - 40;
+        
+        // -30 DB by default because files are usually very loud, also it'd be weird to have
+        // a slider go from -30 to 50, so it's also a visual choice.
+        player.VolumeDb = (float) FunnierDoomModConfig.VolumeSlider - 30;
     
         SceneTree tree = (SceneTree)Engine.GetMainLoop();
         tree.Root.AddChild(player);
@@ -78,4 +75,26 @@ public static class NDoomVfxPlayVfxPatch
             
         player.Play();
     }
+
+    /**
+     * Returns a random index from the given funny SFX in the "FunnyDoomSounds" folder.
+     * Index cannot be the same as previous, for variety.
+     *
+     * @returns a random index that is not the previous index
+     */
+    private static int ReturnRandomIndex()
+    {
+        Random random = new Random();
+        int index = random.Next(0, FunnySoundsAmount);
+
+        if (index == _recentFunnySoundIndex)
+        {
+            return ReturnRandomIndex();
+        }
+        
+        _recentFunnySoundIndex = index;
+        
+        return _recentFunnySoundIndex;
+    }
+        
 }

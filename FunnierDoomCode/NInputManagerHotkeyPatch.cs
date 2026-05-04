@@ -9,13 +9,11 @@ namespace FunnierDoom.FunnierDoomCode;
 [HarmonyPatch(typeof(NInputManager), nameof(NInputManager._UnhandledKeyInput))]
 public static class NInputManagerHotkeyPatch
 {
-    private static readonly string ModPath =
-        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
-        ?? throw new Exception("Could not find mod path.");
-
-    private static readonly string SoundDirectoryPath =
-        Path.Combine(ModPath, "FunnyDoomSounds");
-    
+    /**
+     * Overrides MegaCrit's input manager to read button presses in real-time
+     *
+     * @inputEvent the input button
+     */
     static void Prefix(InputEvent inputEvent)
     {
         if (inputEvent is not InputEventKey keyEvent)
@@ -24,67 +22,10 @@ public static class NInputManagerHotkeyPatch
         if (!keyEvent.Pressed || keyEvent.Echo)
             return;
 
-        GD.Print($"[FunnierDoom] Key pressed: {keyEvent.Keycode}");
-
+        // The FunnyDoomSounds will be played and can be tested at will by pressing F8
         if (keyEvent.Keycode == Key.F8)
         {
-            GD.Print("[FunnierDoom] F8 pressed!");
-            
-            string soundPath = Path.Combine(SoundDirectoryPath, "Prowler Sound.mp3");
-
-            if (File.Exists(soundPath))
-            {
-                GD.Print("File exists!");
-                GD.Print(soundPath);
-                
-                NDoomVfxPlayVfxPatch.PlayCustomSound();
-                
-                //PlayCustomSound();
-                
-                //SfxCmd.Play("event:/sfx/characters/necrobinder/necrobinder_doom_kill");
-                //SfxCmd.Play(soundPath);
-            }
-            else if (!File.Exists(soundPath))
-            {
-                GD.Print("File doesn't exist!");
-                GD.Print(soundPath);
-            }
+            NDoomVfxPlayVfxPatch.PlayCustomSound();
         }
     }
-    
-    // public static void PlayCustomSound()
-    // {
-    //     string modPath = Path.GetDirectoryName(
-    //         Assembly.GetExecutingAssembly().Location
-    //     ) ?? throw new Exception("Could not find mod path.");
-    //
-    //     string soundPath = Path.Combine(
-    //         modPath,
-    //         "FunnyDoomSounds",
-    //         "Prowler Sound.mp3"
-    //     );
-    //
-    //     GD.Print("[FunnierDoom] Sound path: " + soundPath);
-    //     GD.Print("[FunnierDoom] File exists: " + File.Exists(soundPath));
-    //
-    //     if (!File.Exists(soundPath))
-    //         return;
-    //
-    //     AudioStreamMP3 stream = AudioStreamMP3.LoadFromFile(soundPath);
-    //
-    //     AudioStreamPlayer player = new AudioStreamPlayer();
-    //     player.Stream = stream;
-    //     player.VolumeDb = 0;
-    //
-    //     SceneTree tree = (SceneTree)Engine.GetMainLoop();
-    //     tree.Root.AddChild(player);
-    //
-    //     player.Finished += () =>
-    //     {
-    //         player.QueueFree();
-    //     };
-    //
-    //     player.Play();
-    // }
-    
 }
